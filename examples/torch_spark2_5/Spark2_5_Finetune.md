@@ -31,8 +31,8 @@ LLaMA‑Factory supports three formats: alpaca, sharegpt, and openai. The exampl
 ```json
 {"messages": [
   {"role": "system", "content": "you are a helpful assistant."},
-  {"role": "user", "content": "用户问题"},
-  {"role": "assistant", "content": "助手回答"}
+  {"role": "user", "content": "user question"},
+  {"role": "assistant", "content": "assistant answer"}
 ]}
 ```
 
@@ -61,9 +61,9 @@ Edit `data/dataset_info.json` and add your entry:
 
 ## 2. Full SFT config (Muon optimizer)
 
-Save under `examples/train_full/`. Muon routes 2D weights (excluding `embed`/`lm_head`) to Newton-Schulz orthogonalization and everything else (1D norms/bias, embeddings, lm_head) to AdamW.
+Muon routes 2D weights (excluding `embed`/`lm_head`) to Newton-Schulz orthogonalization and everything else (1D norms/bias, embeddings, lm_head) to AdamW.
 
-### 2.1 1.7B: `examples/train_full/spark1p7b_sft.yaml`
+### 2.1 Configuration example for the 1.7B‑parameter model：
 
 ```yaml
 ### model
@@ -110,7 +110,7 @@ bf16: true
 ddp_timeout: 180000000
 ```
 
-### 2.2 4B: `examples/train_full/spark4b_sft.yaml`
+### 2.2 Configuration example for the 4B‑parameter model：
 
 4B weights are stored as fp32 (~15.3 GB); memory pressure is much higher than 1.7B. Enable gradient checkpointing and prefer multi-GPU; 
 
@@ -128,7 +128,7 @@ use_muon: true
 ### dataset
 dataset: my_chat_data
 template: spark
-cutoff_len: 2048                                     # drop to 1024 if OOM
+cutoff_len: 2048
 overwrite_cache: true
 preprocessing_num_workers: 16
 dataloader_num_workers: 4
@@ -165,9 +165,8 @@ ddp_timeout: 180000000
 
 LoRA injects a low-rank `A·B` delta beside the target linear layers and freezes the backbone; trainable params are typically a few MB. The optimizer runs default AdamW (`adamw_torch`) — **do not set `use_muon`**.
 
-Save under `examples/train_lora/`.
 
-### 3.1 1.7B: `examples/train_lora/spark1p7b_lora_sft.yaml`
+### 3.1 Configuration example for the 1.7B‑parameter model：
 
 ```yaml
 ### model
@@ -213,7 +212,7 @@ bf16: true
 ddp_timeout: 180000000
 ```
 
-### 3.2 4B: `examples/train_lora/spark4b_lora_sft.yaml`
+### 3.2 Configuration example for the 4B‑parameter model：
 
 4B weights are fp32 (~15.3 GB), but LoRA freezes the backbone — memory pressure comes from forward activations, not optimizer state, so a single GPU is enough. Keep `gradient_checkpointing` to cut activation memory.
 
@@ -237,7 +236,7 @@ lora_target: all
 ### dataset
 dataset: my_chat_data
 template: spark
-cutoff_len: 2048                                     # drop to 1024 if OOM
+cutoff_len: 2048
 overwrite_cache: true
 preprocessing_num_workers: 16
 dataloader_num_workers: 4
@@ -275,23 +274,21 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export DISABLE_VERSION_CHECK=1
 
 # 1.7B
-llamafactory-cli train examples/train_full/spark1p7b_sft.yaml
+llamafactory-cli train examples/torch_spark2_5/example_1p7b_sft_args.yaml
 # 4B (multi-GPU recommended — fp32 weights are memory-heavy)
-llamafactory-cli train examples/train_full/spark4b_sft.yaml
+llamafactory-cli train examples/torch_spark2_5/example_4b_sft_args.yaml
 ```
 
 #### 4.2 Background run (long training)
 
 ```bash
 # 1.7B
-nohup llamafactory-cli train examples/train_full/spark1p7b_sft.yaml \
+nohup llamafactory-cli train examples/torch_spark2_5/example_1p7b_sft_args.yaml \
   > saves/spark2_5_1p7b_sft/train.log 2>&1 &
 
 # 4B
-nohup llamafactory-cli train examples/train_full/spark4b_sft.yaml \
+nohup llamafactory-cli train examples/torch_spark2_5/example_1p7b_sft_args.yaml \
   > saves/spark2_5_4b_sft/train.log 2>&1 &
-
-tail -f saves/spark2_5_1p7b_sft/train.log
 ```
 
 #### 4.3 Expected log output

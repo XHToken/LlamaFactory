@@ -69,9 +69,9 @@ LLaMA-Factory 支持 **alpaca** 、 **sharegpt** 、**openai**三种格式。示
 
 ## 2. 全参数 SFT 配置（Muon 优化器）
 
-保存到 `examples/train_full/` 目录下。Muon 将 2D 权重（排除 `embed`/`lm_head`）路由到 Newton-Schulz 正交化，其余参数（1D norm/bias、embedding、lm_head）路由到 AdamW。
+Muon 将 2D 权重（排除 `embed`/`lm_head`）路由到 Newton-Schulz 正交化，其余参数（1D norm/bias、embedding、lm_head）路由到 AdamW。
 
-### 2.1 1.7B：`examples/train_full/spark1p7b_sft.yaml`
+### 2.1 1.7B配置示例：
 
 ```yaml
 ### model
@@ -118,7 +118,7 @@ bf16: true
 ddp_timeout: 180000000
 ```
 
-### 2.2 4B：`examples/train_full/spark4b_sft.yaml`
+### 2.2 4B配置示例：
 
 4B 权重以 fp32 存储（约 15.3 GB），显存压力远高于 1.7B。请启用 gradient checkpointing 并优先使用多卡；
 
@@ -136,7 +136,7 @@ use_muon: true
 ### dataset
 dataset: my_chat_data
 template: spark
-cutoff_len: 2048                                     # 显存不足时降到 1024
+cutoff_len: 2048
 overwrite_cache: true
 preprocessing_num_workers: 16
 dataloader_num_workers: 4
@@ -173,9 +173,7 @@ ddp_timeout: 180000000
 
 LoRA 在目标线性层旁注入低秩 `A·B` 增量并冻结主干，可训练参数通常只有几 MB。优化器运行默认 AdamW（`adamw_torch`）—— **不要设置 `use_muon`**。
 
-保存到 `examples/train_lora/` 目录下。
-
-### 3.1 1.7B：`examples/train_lora/spark1p7b_lora_sft.yaml`
+### 3.1 1.7B配置示例：
 
 ```yaml
 ### model
@@ -221,7 +219,7 @@ bf16: true
 ddp_timeout: 180000000
 ```
 
-### 3.2 4B：`examples/train_lora/spark4b_lora_sft.yaml`
+### 3.2 4B配置示例：
 
 4B 权重为 fp32（约 15.3 GB），但 LoRA 冻结了主干 —— 显存压力来自前向激活值而非优化器状态，因此单卡即可。建议保留 `gradient_checkpointing` 以削减激活显存。
 
@@ -245,7 +243,7 @@ lora_target: all
 ### dataset
 dataset: my_chat_data
 template: spark
-cutoff_len: 2048                                     # 显存不足时降到 1024
+cutoff_len: 2048
 overwrite_cache: true
 preprocessing_num_workers: 16
 dataloader_num_workers: 4
@@ -283,23 +281,21 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export DISABLE_VERSION_CHECK=1
 
 # 1.7B
-llamafactory-cli train examples/train_full/spark1p7b_sft.yaml
+llamafactory-cli train examples/torch_spark2_5/example_1p7b_sft_args.yaml
 # 4B（推荐多卡 —— fp32 权重显存占用大）
-llamafactory-cli train examples/train_full/spark4b_sft.yaml
+llamafactory-cli train examples/torch_spark2_5/example_4b_sft_args.yaml
 ```
 
 #### 4.2 后台运行（长时间训练）
 
 ```bash
 # 1.7B
-nohup llamafactory-cli train examples/train_full/spark1p7b_sft.yaml \
+nohup llamafactory-cli train examples/torch_spark2_5/example_1p7b_sft_args.yaml \
   > saves/spark2_5_1p7b_sft/train.log 2>&1 &
 
 # 4B
-nohup llamafactory-cli train examples/train_full/spark4b_sft.yaml \
+nohup llamafactory-cli train examples/torch_spark2_5/example_4b_sft_args.yaml \
   > saves/spark2_5_4b_sft/train.log 2>&1 &
-
-tail -f saves/spark2_5_1p7b_sft/train.log
 ```
 
 #### 4.3 预期日志输出
