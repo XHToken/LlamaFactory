@@ -1,0 +1,42 @@
+### model
+model_name_or_path: ${PATH_SPARK_1P7B_MODEL}
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: full
+use_muon: true
+
+### dataset
+dataset: ${PATH_TRANNING_DATA}
+template: spark
+cutoff_len: 2048
+preprocessing_num_workers: 16
+dataloader_num_workers: 4
+
+### output
+output_dir: ${PATH_MODEL_SAVED}
+logging_steps: 10
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+save_only_model: false
+report_to: none
+
+### train
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 4
+learning_rate: 4.0e-5
+weight_decay: 0.1
+adam_beta1: 0.9
+adam_beta2: 0.95
+adam_epsilon: 1.0e-8
+num_train_epochs: 3.0
+lr_scheduler_type: cosine_with_min_lr
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
+warmup_steps: 0
+bf16: true
+ddp_timeout: 180000000
+resume_from_checkpoint: null
