@@ -371,7 +371,7 @@ LoRA SFT 与全参数 SFT 流程一致，但将微调方法切换为 `lora`，�
 2. **Model path**：模型目录的绝对路径。
 3. **Finetuning method**：`lora`。
 4. **Training stage**：`Supervised Fine-Tuning`。
-5. **Template**：`deepseek3`。
+5. **Template**：`spark`。
 6. **Dataset**：勾选已注册的数据集（如 `spark_sft`）。
 7. **LoRA 标签页**：设置 `lora_rank`（8 / 16 / 32）、`lora_alpha`（默认 = rank × 2）、`lora_dropout`（0.05）、`lora_target`（`all` 或逗号分隔的层名，如 `q_k_v_proj,g_proj,out_proj,gate_proj,up_proj,down_proj`）。
 8. 按第 3 节的 CLI 配置填写 **Train** 标签页；LoRA 显存占用低，单卡通常足够。

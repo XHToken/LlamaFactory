@@ -363,7 +363,7 @@ LoRA SFT mirrors Full SFT but switches the finetuning method to `lora` and expos
 2. **Model path**: absolute path to the model directory.
 3. **Finetuning method**: `lora`.
 4. **Training stage**: `Supervised Fine-Tuning`.
-5. **Template**: `deepseek3`.
+5. **Template**: `spark`.
 6. **Dataset**: tick the registered dataset (e.g. `spark_sft`).
 7. **LoRA tab**: set `lora_rank` (8 / 16 / 32), `lora_alpha` (default = rank × 2), `lora_dropout` (0.05), `lora_target` (`all` or comma-separated layer names such as `q_k_v_proj,g_proj,out_proj,gate_proj,up_proj,down_proj`).
 8. Fill the **Train** tab per the CLI configs in section 3; LoRA is memory-light, so a single GPU is usually enough.
