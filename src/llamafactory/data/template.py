@@ -530,6 +530,19 @@ class Glm47ReasoningTemplate(ReasoningTemplate):
 
 TEMPLATES: dict[str, "Template"] = {}
 
+@dataclass
+class SparkReasoningTemplate(ReasoningTemplate):
+    r"""Spark uses only the closing </think> tag for empty thinking blocks."""
+
+    @override
+    def add_thought(self, content: str = "") -> str:
+        if not content:
+            return self.thought_words[1]
+
+        return self.thought_words[0] + content + self.thought_words[1]
+
+
+TEMPLATES: dict[str, "Template"] = {}
 
 def register_template(
     name: str,
@@ -2477,4 +2490,18 @@ register_template(
     thought_words=("<think>", "</think>"),
     efficient_eos=True,
     template_class=Glm47ReasoningTemplate,
+)
+
+register_template(
+    name="spark",
+    format_user=StringFormatter(slots=["<｜start▁of▁sentence｜><|User|>{{content}}<｜end▁of▁sentence｜><｜start▁of▁sentence｜><|Bot|>"]),
+    format_assistant=StringFormatter(slots=["{{content}}<｜end▁of▁sentence｜>"]),
+    format_system=StringFormatter(slots=["<|System|>{{content}}<｜end▁of▁sentence｜>"]),
+    format_observation=StringFormatter(slots=["<｜start▁of▁sentence｜><|Tool|><tool_response>{{content}}</tool_response><｜end▁of▁sentence｜><｜start▁of▁sentence｜><|Bot|>"]),
+    format_prefix=EmptyFormatter(slots=[{"bos_token"}]),
+    efficient_eos=False,
+    replace_jinja_template=True,
+    thought_words=("<think>", "</think>"),
+    template_class=SparkReasoningTemplate,
+    default_system="\nyou are a helpful assistant."
 )
