@@ -335,8 +335,8 @@ The WebUI builds the arg dict in `_parse_train_args` (`src/llamafactory/webui/ru
 2. **Model path**: absolute path to the model directory.
 3. **Finetuning method**: `full` (Muon does not support lora/freeze).
 4. **Training stage**: `Supervised Fine-Tuning`.
-5. **Template**: `deepseek3`.
-6. **Dataset**: tick the registered dataset (e.g. `spark_sft`).
+5. **Template**: `spark`.
+6. **Dataset**: tick the registered dataset.
 7. Fill the **Train** tab according to CLI . 
 8. **Preview command**: click "Preview" to inspect the generated command, then "Start".
 
@@ -344,16 +344,16 @@ The WebUI builds the arg dict in `_parse_train_args` (`src/llamafactory/webui/ru
 
 The WebUI form doesn't expose `use_muon`, `warmup_ratio`, `gradient_checkpointing`, `save_only_model`. Put them in the Train tab's "Additional arguments" box as JSON; it is merged via `args.update(json.loads(extra_args))` (`runner.py:187`), overriding form values.
 
-**1.7B**:
+**1.7B**(Do **not** set `trust_remote_code: true`, otherwise it will fail to perform recognition):
 
 ```json
-{"use_muon": true, "warmup_ratio": 0, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000}
+{"use_muon": true,  "weight_decay": 0.1,"adam_beta1":0.9,"adam_beta2":0.95,"adam_epsilon":1.0e-8,, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000}
 ```
 
-**4B** (add `gradient_checkpointing`):
+**4B** (add `gradient_checkpointing`,If you encounter insufficient VRAM and are using ZeRO‑1/2 sharding, disable `use_muon` to avoid compatibility issues):
 
 ```json
-{"use_muon": true, "warmup_ratio": 0, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000, "gradient_checkpointing": true}
+{"use_muon": true,  "weight_decay": 0.1,"adam_beta1":0.9,"adam_beta2":0.95,"adam_epsilon":1.0e-8,, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000, "gradient_checkpointing": true}
 ```
 ### 5.3 LoRA SFT via WebUI
 
@@ -390,7 +390,7 @@ This parallels the CLI LoRA configs in section 3.
 
 ### 5.4 Preview & monitor
 
-After clicking **Preview**, the output box shows the equivalent CLI command (4B example):
+After clicking **Preview command**, the output box shows the equivalent CLI command (4B example):
 
 ```
 llamafactory-cli train /path/to/llamaboard_cache/cmd_<timestamp>.yaml
