@@ -342,26 +342,27 @@ WebUI 在 `_parse_train_args`（`src/llamafactory/webui/runner.py:133-298`）中
 2. **Model path**：模型目录的绝对路径。
 3. **Finetuning method**：`full`（Muon 不支持 lora/freeze）。
 4. **Training stage**：`Supervised Fine-Tuning`。
-5. **Template**：`deepseek3`。
-6. **Dataset**：勾选已注册的数据集（如 `spark_sft`）。
+5. **Template**：`spark`。
+6. **Dataset**：勾选已注册的数据集。
 7. 按 CLI 配置填写 **Train** 标签页。
 8. **Preview command**：点击 "Preview" 查看生成的命令，然后点击 "Start"。
 
 #### 5.2.1 附加参数（注入 Muon 与 gradient checkpointing）
 
-WebUI 表单未暴露 `use_muon`、`warmup_ratio`、`gradient_checkpointing`、`save_only_model`。将它们以 JSON 形式填入 Train 标签页的 "Additional arguments" 输入框；通过 `args.update(json.loads(extra_args))`（`runner.py:187`）合并，会覆盖表单值。
+WebUI 表单未暴露 `use_muon`、`warmup_ratio`、`gradient_checkpointing`、`save_only_model`等。将它们以 JSON 形式填入 Train 标签页的 "Additional arguments" 输入框；通过 `args.update(json.loads(extra_args))`（`runner.py:187`）合并，会覆盖表单值。
 
-**1.7B**：
-
-```json
-{"use_muon": true, "warmup_ratio": 0, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000}
-```
-
-**4B**（追加 `gradient_checkpointing`）：
+**1.7B**（不要写入trust_remote_code: true，否则无法识别）：
 
 ```json
-{"use_muon": true, "warmup_ratio": 0, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000, "gradient_checkpointing": true}
+{"use_muon": true,  "weight_decay": 0.1,"adam_beta1":0.9,"adam_beta2":0.95,"adam_epsilon":1.0e-8,, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000}
 ```
+
+**4B**（追加 `gradient_checkpointing`，若显存不够使用ZERO1/2等分片，可考虑关闭muon以防无法兼容）：
+
+```json
+{"use_muon": true, "weight_decay": 0.1,"adam_beta1":0.9,"adam_beta2":0.95,"adam_epsilon":1.0e-8, "save_only_model": false, "overwrite_cache": true, "dataloader_num_workers": 4, "ddp_timeout": 180000000, "gradient_checkpointing":false}
+```
+
 
 ### 5.3 通过 WebUI 进行 LoRA SFT
 
@@ -398,7 +399,7 @@ LoRA 禁止启用 `use_muon`。4B 需追加 `gradient_checkpointing` 以削减�
 
 ### 5.4 预览与监控
 
-点击 **Preview** 后，输出框会显示等价的 CLI 命令（4B 示例）：
+点击 **Preview command** 后，输出框会显示等价的 CLI 命令（4B 示例）：
 
 ```
 llamafactory-cli train /path/to/llamaboard_cache/cmd_<timestamp>.yaml
@@ -408,7 +409,7 @@ llamafactory-cli train /path/to/llamaboard_cache/cmd_<timestamp>.yaml
 
 启动后：
 
-- 右侧输出框会实时流式输出日志；进度条显示完成比例，下方绘制 loss 曲线。
+- 右侧输出框会实时流式输出日志；进度条显示完成比例，上方绘制 loss 曲线。
 - 子进程的 stdout/stderr 会写入 `<output_dir>/webui_subprocess.log` —— 可直接 `tail -f` 查看。
 - 训练配置保存到 `<output_dir>/llamaboard_config.json`，便于复现。
 - 点击 "Abort" 可中断训练（向子进程发送 SIGABRT）。
